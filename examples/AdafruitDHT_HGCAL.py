@@ -109,7 +109,7 @@ sensor3 = adafruit_max31865.MAX31865(spi, cs3, rtd_nominal=1000, ref_resistor=43
 
 #open dht22 data file to log data
 save_path = "/home/pi/Adafruit_Python_DHT/data"
-filename = raw_input("Data filename (without .txt) : ")
+filename = input("Data filename (without .txt) : ")
 full_filename = os.path.join(save_path, filename+".csv")
 f = open(full_filename, "w")
 
@@ -117,17 +117,26 @@ while True:
     # Login if necessary.
     
     # Attempt to get sensor reading.
-    if humidity is not None and temperature is not None:
+    humidity_s1, temp_s1 = Adafruit_DHT.read(DHT_TYPE, DHT_PIN_s1)
 
-        command = "C2\r"
-        ser.write(command.encode()) #python3
-        data = ser.readline()
-        decode_data = data.decode("utf-8")
-        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S ") + decode_data)
-        print('Temperature_S1: {0:0.1f} C '.format(temp_s1) + 'Humidity_S1: {0:0.1f} %'.format(humidity_s1))
-        print("pt100  Temperature: {0:0.2f}*C Resistance: {1:0.3f}*Ohms".format(temp2, resis2))
-        print("pt1000 Temperature: {0:0.2f}*C Resistance: {1:0.3f}*Ohms".format(temp3, resis3))
-	f.writelines(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,")+'{0:0.01f},{1:0.01f},{2:0.2f},{3:0.2f},'.format(temperature, humidity, temp2, temp3)+ decode_data)
+    temp2 = sensor2.temperature
+    resis2 = sensor2.resistance
+    
+    temp3 = sensor3.temperature
+    resis3 = sensor3.resistance
+
+    if temp_s1 is None:
+        time.sleep(2)
+        continue
+    command = "C2\r"
+    ser.write(command.encode()) #python3
+    data = ser.readline()
+    decode_data = data.decode("utf-8")
+    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S ") + decode_data)
+    print('Temperature_S1: {0:0.1f} C '.format(temp_s1) + 'Humidity_S1: {0:0.1f} %'.format(humidity_s1))
+    print("pt100  Temperature: {0:0.2f}*C Resistance: {1:0.3f}*Ohms".format(temp2, resis2))
+    print("pt1000 Temperature: {0:0.2f}*C Resistance: {1:0.3f}*Ohms".format(temp3, resis3))
+    f.writelines(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,")+'{0:0.01f},{1:0.01f},{2:0.2f},{3:0.2f},'.format(temperature, humidity, temp2, temp3)+ decode_data)
     else:
         print('Failed to get reading. Try again!')
 
