@@ -116,7 +116,7 @@ def login_open_sheet(oauth_key_file, spreadsheet):
         sys.exit(1)
 
 print('Logging sensor measurements to {0} every {1} seconds.'.format(GDOCS_SPREADSHEET_NAME, FREQUENCY_SECONDS))
-print('Press Ctrl-C to quit.')
+#print('Press Ctrl-C to quit.')
 worksheet = None
 
 # Initialize SPI bus and sensor.
@@ -126,6 +126,11 @@ cs3 = digitalio.DigitalInOut(board.D6) #rtd1000
 sensor2 = adafruit_max31865.MAX31865(spi, cs2)
 sensor3 = adafruit_max31865.MAX31865(spi, cs3, rtd_nominal=1000, ref_resistor=4300.0, wires=2)
 
+#open dht22 data file to log data
+save_path = "/home/pi/Adafruit_Python_DHT/data"
+filename = input("Data filename (without .txt) : ")
+full_filename = os.path.join(save_path, filename+".csv")
+f = open(full_filename, "a+")
 
 while True:
     # Login if necessary.
@@ -154,6 +159,7 @@ while True:
     data = ser.readline()
     decode_data = data.decode("utf-8")
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S ") + decode_data)
+    #print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ',{0:0.1f},{0:0.1f},{0:0.2f},{1:0.3f},{0:0.2f},{1:0.3f},'.format(temp_s1, humidity_s1, temp2, resis2, temp3, resis3)+ decode_data)
     
     print('Temperature_S1: {0:0.1f} C '.format(temp_s1) + 'Humidity_S1: {0:0.1f} %'.format(humidity_s1))
     #print('Temperature_S2: {0:0.1f} C '.format(temp_s2) + 'Humidity_S2: {0:0.1f} %'.format(humidity_s2))
@@ -161,7 +167,8 @@ while True:
     print("pt100  Temperature: {0:0.2f}*C Resistance: {1:0.3f}*Ohms".format(temp2, resis2))
     print("pt1000 Temperature: {0:0.2f}*C Resistance: {1:0.3f}*Ohms".format(temp3, resis3))
     
-
+    f.writelines(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,")+',{0:0.1f},{1:0.1f},{2:0.2f},{3:0.3f},{4:0.2f},{5:0.3f},'.format(temp_s1, humidity_s1, temp2, resis2, temp3, resis3) + decode_data +'\n')
+    
     # Append the data in the spreadsheet, including a timestamp
     try:
         #worksheet.append_row((datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), temp_s1, humidity_s1, temp_s2, humidity_s2, temp_s3, humidity_s3, decode_data))
